@@ -6,8 +6,10 @@ import os
 import random
 import requests
 import asyncio
-import openai
 from bot_logic import gen_pass
+
+# NewsAPI key
+newsapi_key = 'Token'
 
 description = '''An example bot to showcase the discord.ext.commands extension module. There are a number of utility commands being showcased here.'''
 
@@ -17,9 +19,6 @@ intents.message_content = True
 
 # Membuat klien bot
 bot = commands.Bot(command_prefix='>', description=description, intents=intents)
-
-# Set your OpenAI API key here
-openai.api_key = 'token epenai'
 
 # Menambahkan perintah untuk mendapatkan waktu berdasarkan zona waktu tertentu
 @bot.command()
@@ -129,7 +128,7 @@ async def meme(ctx):
         picture = discord.File(f)
     await ctx.send(file=picture)
 
-# API to get random dog and duck image 
+# API to get random dog image 
 def get_dog_image_url():
     url = 'https://random.dog/woof.json'
     res = requests.get(url)
@@ -140,6 +139,7 @@ async def dog(ctx):
     '''Setiap kali permintaan dog (anjing) dipanggil, program memanggil fungsi get_dog_image_url'''
     image_url = get_dog_image_url()
     await ctx.send(image_url)
+# API to get random duck image
 def get_duck_image_url():
     url = 'https://random-d.uk/api/random'
     res = requests.get(url)
@@ -150,6 +150,7 @@ async def duck(ctx):
     '''Setiap kali permintaan duck (bebek) dipanggil, program memanggil fungsi get_duck_image_url'''
     image_url = get_duck_image_url()
     await ctx.send(image_url)
+# API to get random cat image
 def get_cat_image_url():
     url = 'https://api.thecatapi.com/v1/images/search'
     res = requests.get(url)
@@ -166,6 +167,7 @@ async def cat(ctx):
         await ctx.send(image_url)
     else:
         await ctx.send("Maaf, gagal mendapatkan gambar kucing.")
+# API to get random Absurd Meme image
 def get_memeabsurd_image_url():
     url = 'https://api.imgflip.com/get_memes'
     response = requests.get(url)
@@ -185,28 +187,73 @@ async def memeabsurd(ctx):
     else:
         await ctx.send("Failed to fetch absurd meme.")
 
-# Pengenalan dan Kesadaran dengan OpenAI API
-@bot.command()
-async def mulai(ctx):
-    prompt = (
-        "Berikan informasi penting tentang mengapa mengurangi sampah itu penting dan tips untuk remaja untuk mengurangi sampah di rumah. "
-        "Buat informasi ini menarik dan mudah dipahami."
-    )
-    try:
-        response = openai.Completion.create(
-            engine="text-davinci-003",
-            prompt=prompt,
-            max_tokens=150
-        )
-        message = response.choices[0].text.strip()
-        await ctx.send(message)
-    except Exception as e:
-        await ctx.send(f"Terjadi kesalahan saat mengambil data: {str(e)}")
-
 # welcome message
 @bot.command()
 async def joined(ctx, member: discord.Member):
     """Says when a member joined."""
     await ctx.send(f'{member.name} joined {discord.utils.format_dt(member.joined_at)}')
 
-bot.run('token dc')
+# Fungsi untuk mendapatkan artikel terkait polusi sampah dari NewsAPI
+def get_trash_pollution_info():
+    url = f'https://newsapi.org/v2/everything?q=trash%20pollution&apiKey={newsapi_key}'
+    response = requests.get(url)
+    if response.status_code == 200:
+        data = response.json()
+        articles = data.get('articles', [])
+        if articles:
+            article = random.choice(articles)
+            return f"**{article['title']}**\n{article['description']}\n{article['url']}"
+        else:
+            return "Tidak ada artikel yang ditemukan tentang polusi sampah."
+    else:
+        return f"Terjadi kesalahan saat mengambil data: {response.status_code}"
+# Menambahkan perintah untuk mendapatkan informasi tentang polusi sampah
+@bot.command()
+async def trashinfo(ctx):
+    """Memberikan informasi tentang polusi sampah dan dampaknya menggunakan NewsAPI."""
+    info = get_trash_pollution_info()
+    await ctx.send(info)
+
+# Menambahkan perintah untuk mendapatkan tips tentang cara mengurangi sampah harian
+@bot.command()
+async def tipssampah(ctx):
+    """Memberikan tips tentang cara mengurangi sampah harian."""
+    tips = [
+        "Gunakan botol minum dan tas belanja yang dapat digunakan ulang.",
+        "Pisahkan sampah organik dan non-organik untuk proses daur ulang yang lebih baik.",
+        "Kurangi penggunaan kantong plastik dengan membawa tas belanja sendiri.",
+        "Hindari pembelian produk dalam kemasan sekali pakai sebisa mungkin.",
+        "Gunakan produk yang dapat diisi ulang seperti sabun cuci, shampoo, dan deterjen.",
+        "Pilih barang-barang dengan kemasan minimal atau tanpa kemasan untuk mengurangi limbah kemasan.",
+        "Kurangi penggunaan kertas dengan menggunakan email daripada surat fisik.",
+        "Hemat penggunaan listrik dengan mematikan perangkat elektronik saat tidak digunakan.",
+        "Gunakan alat dapur yang dapat digunakan kembali, seperti botol plastik bekas untuk menyimpan makanan atau menyimpan barang kecil.",
+        "Beralih ke pembungkus makanan yang dapat digunakan kembali, seperti bungkus lilin lebah atau tas kain yang bisa dicuci.",
+        "Gunakan produk pembersih yang ramah lingkungan dan dapat didaur ulang.",
+        "Beli barang-barang bekas atau barang second-hand untuk mengurangi pembelian barang baru yang berpotensi menjadi sampah.",
+        "Daftarlah ke dalam program pengambilan sampah yang dapat didaur ulang oleh pemerintah setempat jika tersedia."
+    ]
+    tip = random.choice(tips)
+    await ctx.send(tip)
+
+# Daftar panduan cara mendaur ulang sampah anorganik
+panduan_daur_ulang = [
+    "1. Pisahkan sampah anorganik seperti kertas, plastik, dan logam ke dalam tempat sampah terpisah.",
+    "2. Gunakan kembali kemasan plastik bekas untuk menyimpan barang-barang kecil atau membuat kerajinan tangan.",
+    "3. Daur ulang kertas bekas menjadi kertas baru dengan mengirimkannya ke tempat daur ulang kertas terdekat.",
+    "4. Logam seperti kaleng dapat didaur ulang untuk membuat produk logam yang baru.",
+    "5. Jika memungkinkan, gunakan kembali atau daur ulang peralatan elektronik bekas.",
+    "6. Hindari membuang sampah elektronik ke tempat sampah umum, carilah tempat daur ulang elektronik yang terpercaya.",
+    "7. Bila memungkinkan, gunakan kembali atau daur ulang kaca bekas untuk mengurangi limbah kaca.",
+    "8. Simpan limbah elektronik beracun seperti baterai dan lampu pijar terpisah untuk didaur ulang dengan aman.",
+    "9. Daur ulang plastik bekas dengan cara mengirimkannya ke pabrik daur ulang plastik atau menggunakan kembali produk plastik."
+]
+# Menambahkan perintah untuk memberikan panduan cara mendaur ulang sampah anorganik
+@bot.command()
+async def panduandaurulang(ctx):
+    """Memberikan panduan cara mendaur ulang sampah anorganik."""
+    # Memilih panduan secara acak dari daftar panduan
+    panduan_terpilih = random.choice(panduan_daur_ulang)
+    await ctx.send(panduan_terpilih)
+
+bot.run('Token')
